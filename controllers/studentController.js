@@ -1,54 +1,54 @@
 const { ObjectId } = require('mongoose').Types;
-const { Student, Course } = require('../models');
+const { Thought, User } = require('../models');
 
-// Aggregate function to get the number of students overall
+// Aggregate function to get the number of thoughts overall
 const headCount = async () =>
-  Student.aggregate()
-    .count('studentCount')
-    .then((numberOfStudents) => numberOfStudents);
+  Thought.aggregate()
+    .count('thoughtCount')
+    .then((numberOfThoughts) => numberOfThoughts);
 
 // Aggregate function for getting the overall grade using $avg
-const grade = async (studentId) =>
-  Student.aggregate([
-    // only include the given student by using $match
-    { $match: { _id: ObjectId(studentId) } },
+const grade = async (thoughtId) =>
+  Thought.aggregate([
+    // only include the given thought by using $match
+    { $match: { _id: ObjectId(thoughtId) } },
     {
-      $unwind: '$assignments',
+      $unwind: '$reactions',
     },
     {
       $group: {
-        _id: ObjectId(studentId),
-        overallGrade: { $avg: '$assignments.score' },
+        _id: ObjectId(thoughtId),
+        overallGrade: { $avg: '$reactions.score' },
       },
     },
   ]);
 
 module.exports = {
-  // Get all students
-  getStudents(req, res) {
-    Student.find()
-      .then(async (students) => {
-        const studentObj = {
-          students,
+  // Get all thoughts
+  getThoughts(req, res) {
+    Thought.find()
+      .then(async (thoughts) => {
+        const thoughtObj = {
+          thoughts,
           headCount: await headCount(),
         };
-        return res.json(studentObj);
+        return res.json(thoughtObj);
       })
       .catch((err) => {
         console.log(err);
         return res.status(500).json(err);
       });
   },
-  // Get a single student
-  getSingleStudent(req, res) {
-    Student.findOne({ _id: req.params.studentId })
+  // Get a single thought
+  getSingleThought(req, res) {
+    Thought.findOne({ _id: req.params.thoughtId })
       .select('-__v')
-      .then(async (student) =>
-        !student
-          ? res.status(404).json({ message: 'No student with that ID' })
+      .then(async (thought) =>
+        !thought
+          ? res.status(404).json({ message: 'No thought with that ID' })
           : res.json({
-              student,
-              grade: await grade(req.params.studentId),
+              thought,
+              grade: await grade(req.params.thoughtId),
             })
       )
       .catch((err) => {
@@ -56,30 +56,30 @@ module.exports = {
         return res.status(500).json(err);
       });
   },
-  // create a new student
-  createStudent(req, res) {
-    Student.create(req.body)
-      .then((student) => res.json(student))
+  // create a new thought
+  createThought(req, res) {
+    Thought.create(req.body)
+      .then((thought) => res.json(thought))
       .catch((err) => res.status(500).json(err));
   },
-  // Delete a student and remove them from the course
-  deleteStudent(req, res) {
-    Student.findOneAndRemove({ _id: req.params.studentId })
-      .then((student) =>
-        !student
-          ? res.status(404).json({ message: 'No such student exists' })
-          : Course.findOneAndUpdate(
-              { students: req.params.studentId },
-              { $pull: { students: req.params.studentId } },
+  // Delete a thought and remove them from the user
+  deleteThought(req, res) {
+    Thought.findOneAndRemove({ _id: req.params.thoughtId })
+      .then((thought) =>
+        !thought
+          ? res.status(404).json({ message: 'No such thought exists' })
+          : User.findOneAndUpdate(
+              { thoughts: req.params.thoughtId },
+              { $pull: { thoughts: req.params.thoughtId } },
               { new: true }
             )
       )
-      .then((course) =>
-        !course
+      .then((user) =>
+        !user
           ? res.status(404).json({
-              message: 'Student deleted, but no courses found',
+              message: 'Thought deleted, but no users found',
             })
-          : res.json({ message: 'Student successfully deleted' })
+          : res.json({ message: 'Thought successfully deleted' })
       )
       .catch((err) => {
         console.log(err);
@@ -87,37 +87,37 @@ module.exports = {
       });
   },
 
-  // Add an assignment to a student
-  addAssignment(req, res) {
-    console.log('You are adding an assignment');
+  // Add an reaction to a thought
+  addReaction(req, res) {
+    console.log('You are adding an reaction');
     console.log(req.body);
-    Student.findOneAndUpdate(
-      { _id: req.params.studentId },
-      { $addToSet: { assignments: req.body } },
+    Thought.findOneAndUpdate(
+      { _id: req.params.thoughtId },
+      { $addToSet: { reactions: req.body } },
       { runValidators: true, new: true }
     )
-      .then((student) =>
-        !student
+      .then((thought) =>
+        !thought
           ? res
               .status(404)
-              .json({ message: 'No student found with that ID :(' })
-          : res.json(student)
+              .json({ message: 'No thought found with that ID :(' })
+          : res.json(thought)
       )
       .catch((err) => res.status(500).json(err));
   },
-  // Remove assignment from a student
-  removeAssignment(req, res) {
-    Student.findOneAndUpdate(
-      { _id: req.params.studentId },
-      { $pull: { assignment: { assignmentId: req.params.assignmentId } } },
+  // Remove reaction from a thought
+  removeReaction(req, res) {
+    Thought.findOneAndUpdate(
+      { _id: req.params.thoughtId },
+      { $pull: { reaction: { reactionId: req.params.reactionId } } },
       { runValidators: true, new: true }
     )
-      .then((student) =>
-        !student
+      .then((thought) =>
+        !thought
           ? res
               .status(404)
-              .json({ message: 'No student found with that ID :(' })
-          : res.json(student)
+              .json({ message: 'No thought found with that ID :(' })
+          : res.json(thought)
       )
       .catch((err) => res.status(500).json(err));
   },

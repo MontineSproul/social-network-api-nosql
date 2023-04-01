@@ -4,20 +4,21 @@ const reactionSchema = require('./Reaction');
 // Schema to create Thought model
 const thoughtSchema = new Schema(
   {
-    first: {
+    thoughtText: {
       type: String,
       required: true,
-      max_length: 50,
+      maxlength: 280,
+      minlength: 1,
     },
-    last: {
-      type: String,
-      required: true,
-      max_length: 50,
+    createdAt: {
+        type: Date,
+        default: Date.now,
+      // Sets a default value of 12 weeks from now
+      get: (date) => new Date(date).toLocaleDateString(),
     },
-    github: {
+    username: {
       type: String,
       required: true,
-      max_length: 50,
     },
     reactions: [reactionSchema],
   },

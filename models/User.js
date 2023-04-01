@@ -3,27 +3,33 @@ const { Schema, model } = require('mongoose');
 // Schema to create a user model
 const userSchema = new Schema(
   {
-    userName: {
+    username: {
       type: String,
+      unique: true,
       required: true,
+      trimmed: true,
     },
-    inPerson: {
-      type: Boolean,
-      default: true,
+    email: {
+      type: string,
+      required: true,
+      unique: true,
+      match: [^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$, 'You must use a valid email address!'],
     },
-    startDate: {
-      type: Date,
-      default: Date.now(),
-    },
-    endDate: {
-      type: Date,
-      // Sets a default value of 12 weeks from now
-      default: () => new Date(+new Date() + 84 * 24 * 60 * 60 * 1000),
-    },
+    // friends: {
+    //   type: Date,
+    //   // Sets a default value of 12 weeks from now
+    //   default: () => new Date(+new Date() + 84 * 24 * 60 * 60 * 1000),
+    // },
     thoughts: [
       {
         type: Schema.Types.ObjectId,
-        ref: 'Thought',
+        ref: 'thought',
+      },
+    ],
+     friends: [
+      {
+        type: Schema.Types.ObjectId,
+        ref: 'user',
       },
     ],
   },

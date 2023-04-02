@@ -10,10 +10,10 @@ const userSchema = new Schema(
       trimmed: true,
     },
     email: {
-      type: string,
+      type: String,
       required: true,
       unique: true,
-      match: [^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$, 'You must use a valid email address!'],
+      match: [/^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$/, 'You must use a valid email address!'],
     },
     // friends: {
     //   type: Date,
